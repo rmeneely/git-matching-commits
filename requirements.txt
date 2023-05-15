@@ -1,0 +1,3 @@
+# pip packages to install
+
+GitPython
