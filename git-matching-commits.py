@@ -6,7 +6,7 @@ import re
 import os
 import subprocess
 from git import Repo
-from github import core
+import github_action_utils
 
 # Default values
 DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
@@ -50,7 +50,6 @@ matched_commits.reverse() # Reverse the list so they are in chronological order
 # Return matching commits
 # print("{0}".format(','.join(matched_commits)))
 matching_commits = ','.join(matched_commits)
-core.setOutput('commits', matching_commits)
-# os.environ['MATCHED_COMMITS'] = ','.join(matched_commits)
+github_action_utils.set_output('commits', matching_commits)
 
 # End of file
