@@ -38,16 +38,16 @@ end_tag = 'HEAD'
 if EndTagPattern != 'HEAD':
     end_tag = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern))
 
-
 # Get all commits between the two tags (not including the start tag)
 commits = list(repo.iter_commits("{0}..{1}".format(start_tag, end_tag)))
 matched_commits = []
 for commit in commits:
     if re.search(CommitMessagePattern, commit.message):
         matched_commits.append(commit.hexsha)
+matched_commits.reverse() # Reverse the list so they are in chronological order
 
 # Return matching commits
 print("commits={}".format(','.join(matched_commits)))
-# os.environ['COMMITS'] = ','.join(matched_commits)
+os.environ['MATCHED_COMMITS'] = ','.join(matched_commits)
 
 # End of file

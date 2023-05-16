@@ -22,7 +22,7 @@ All inputs are optional. If not set the default value will be used.
 
 ## Examples
 ```yaml
-    # Returns a list of commits between the latest commit with tag v*.*.0 and the current branch HEAD which commit messages contain '[Hotfix]'
+    # Returns a list of commits between the latest commit with tag matching the start tag pattern and the current branch HEAD which commit messages contain '[Hotfix]'
     - uses: rmeneely/git-matching-commits@v1
       with:
         start_tag_pattern: 'v[0-9]*.[0-9]*.0'
