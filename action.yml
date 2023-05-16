@@ -1,7 +1,7 @@
 name: 'Git matching commits'
 author: Rick Meneely <rick@meneely.com>
 branding:
-  icon: crosshair
+  icon: filter
   color: purple
 description: Returns a string with commits in the current repository with messages matching a regular expression"
 inputs:
@@ -13,7 +13,7 @@ inputs:
     description: A regex to match the ending tag (defaults to HEAD)
     default: ''
     required: false
-  message_pattern:
+  commit_message_pattern:
     description: A regex to match commit messages
     required: true
 outputs:
@@ -33,6 +33,6 @@ runs:
         python ${{ github.action_path }}/git-matching-commits.py \
           --start_tag_pattern "${{ inputs.start_tag_pattern }}" \
           --end_tag_pattern "${{ inputs.end_tag_pattern }}" \
-          --commit_message_pattern "${{ inputs.message_pattern }}" \
+          --commit_message_pattern "${{ inputs.commit_message_pattern }}" \
           >> $GITHUB_OUTPUT
       shell: bash
