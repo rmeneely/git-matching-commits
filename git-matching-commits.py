@@ -6,7 +6,7 @@ import re
 import os
 import subprocess
 from git import Repo
-from github import context, core
+from github import core
 
 # Default values
 DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
