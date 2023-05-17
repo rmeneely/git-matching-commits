@@ -50,7 +50,7 @@ if Debug:
     print("CommitMessagePattern={0}".format(CommitMessagePattern))
 
 # Get all commits between the two tags (not including the start tag)
-commits = git.rev-list("{0}..{1}".format(start_tag, end_tag), reverse=True).split('\n')
+commits = list(git.rev_list("{0}..{1}".format(start_tag, end_tag), reverse=True))
 # commits = list(repo.iter_commits("{0}..{1}".format(start_commit.hexsha, head.hexsha), reverse=True))
 if Debug:
     all_commits = []
