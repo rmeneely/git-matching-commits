@@ -50,23 +50,27 @@ if Debug:
 #     end_tag = end_tags[-1]
 
 # Get all commits between the two tags (not including the start tag)
-commits = list(repo.iter_commits('{0}..{1}'.format(start_tag, end_tag), reverse=True, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
+# commits = list(repo.iter_commits('{0}..{1}'.format(start_tag, end_tag), reverse=True, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
+done = False
+count = 0
 matched_commits = []
-if Debug:
-    print("start_tag={0}".format(start_tag))
-    print("end_tag={0}".format(end_tag))
-    print("CommitMessagePattern={0}".format(CommitMessagePattern))
-    print("#commits={0}".format(len(commits)))
-for commit in commits:
+while not done:
+    commits = list(repo.iter_commits(max_count=50, skip=count))
+    skip = skip + len(commits)
+    count += skip
     if Debug:
-        print("commit={0}".format(commit.hexsha))
-    if commit.hexsha == start_commit.hexsha:
-        next # Skip start commit
-    if re.search(CommitMessagePattern, commit.message):
-        print("Matched commit={0}".format(commit.hexsha))
-        matched_commits.append(commit.hexsha)
-    if commit.hexsha == head.hexsha:
-        break
+        print("# of commits={0}".format(len(commits)))
+    for commit in commits:
+        if Debug:
+            print("commit={0}".format(commit.hexsha))
+        if commit.hexsha == start_commit.hexsha:
+            next # Skip start commit
+        if re.search(CommitMessagePattern, commit.message):
+            print("Matched commit={0}".format(commit.hexsha))
+            matched_commits.append(commit.hexsha)
+        if commit.hexsha == head.hexsha:
+            done = True
+            break
 
 # Return matching commits
 matching_commits = ','.join(matched_commits)
