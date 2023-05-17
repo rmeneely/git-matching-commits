@@ -36,7 +36,7 @@ git = repo.git
 # Get most recent matching tags
 start_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(StartTagPattern)).split('\n')
 start_tag = start_tags[-1]
-end_tag = 'HEAD'
+end_tag = '^HEAD'
 # if EndTagPattern != 'HEAD':
 #     end_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern))
 #     end_tag = end_tags[-1]
@@ -46,7 +46,7 @@ if Debug:
     print("CommitMessagePattern={0}".format(CommitMessagePattern))
 
 # Get all commits between the two tags (not including the start tag)
-commits = list(repo.iter_commits("{0}..{1}".format(start_tag, end_tag)))
+commits = list(repo.iter_commits("{0}..{1}".format(end_tag, start_tag)))
 if Debug:
     all_commits = []
     for commit in commits:
