@@ -12,7 +12,7 @@ from github_action_utils import set_output
 DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
 DefaultEndTagPattern = 'HEAD'
 DefaultCommitMessagePattern = '.*'
-Debug = True
+Debug = False
 
 # Arguments
 parser = argparse.ArgumentParser(description='Match Git commits based on matching commit message')
@@ -40,6 +40,10 @@ tag = repo.tags[start_tag]
 start_commit = tag.commit
 end_tag = 'HEAD'
 head = repo.head.commit
+if Debug:
+    print("start_tag={0}".format(start_tag))
+    print("start_commit={0}".format(start_commit))
+    print("end_tag={0}".format(end_tag))
 
 # if EndTagPattern != 'HEAD':
 #     end_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern))
@@ -50,59 +54,19 @@ if Debug:
     print("CommitMessagePattern={0}".format(CommitMessagePattern))
 
 # Get all commits between the two tags (not including the start tag)
-tag = start_tag
-# commits = git.rev_list('{0}..HEAD'.format(tag), reverse=False).split('\n')
-# cmd = 'git rev-list {0}..{1}'.format(start_tag, end_tag)
-# commits = subprocess.run([cmd], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
-# commits = list(repo.iter_commits('main', "{0}..{1}".format(start_tag, end_tag), reverse=True))
+commits = list(repo.iter_commits('{0}..{1}'.format(start_tag, end_tag), reverse=True, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
 matched_commits = []
-commits = []
-done = False
-print("start_commit.hexsha={0}".format(start_commit.hexsha))
-while not done:
-    count = 0
-    commits = list(repo.iter_commits(rev='{0}..{1}'.format(start_tag, end_tag), reverse=True, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))'))
-    count += len(commits)
-    for commit in commits:
-        if commit.hexsha == start_commit.hexsha:
-            done = True
-            break
-        print("commit={0}".format(commit.hexsha))
-        if re.search(CommitMessagePattern, commit.message):
-            matched_commits.append(commit.hexsha)
-
-
-
-    # commits = list(repo.iter_commits('main', max_count=len(commits), paths=None, reverse=True, since=start_commit))
-    # if len(commits) > 0:
-    #     commitSHA = commits[-1]
-    #     commit = repo.commit(commitSHA)
-    #     if re.search(CommitMessagePattern, commit.message):
-    #         done = True
-    #     else:
-    #         commits.pop()
-    # else:
-    #     done = True
-
-# print("Number of commits:", len(commits))
-# all_commits = []
-# matched_commits = []
-# for commit in commits:
-    # print("commit={0}".format(commit))
-    # print("commitSHA={0}".format(commitSHA))
-    # commit = repo.commit(commitSHA)
-    # print("commit={0}".format(commit.hexsha))
-    # print("commit.message={0}".format(commit.message))
-    # all_commits.append(commit.hexsha)
-    # if re.search(CommitMessagePattern, commit.message):
-    #     matched_commits.append(commit.hexsha)
-
-    # all_commits.append(commit.hexsha)
-# print("all_commits={0}".format(','.join(all_commits)))
+for commit in commits:
+    if commit.hexsha == start_commit.hexsha:
+        next # Skip start commit
+    if re.search(CommitMessagePattern, commit.message):
+        matched_commits.append(commit.hexsha)
+    if commit.hexsha == head.hexsha:
+        break
 
 # Return matching commits
 matching_commits = ','.join(matched_commits)
-print("commits={0}".format(','.join(matching_commits)))
+print("{0}".format(matching_commits))
 set_output('commits', matching_commits)
 
 # End of file
