@@ -69,6 +69,8 @@ matching_commits = ','.join(matched_commits)
 # os.environ['COMMITS'] = matching_commits
 print("commits={0}".format(matching_commits))
 # set_output('commits', matching_commits)
-# os.system("echo commits={0} >> $GITHUB_OUTPUT'.format(matching_commits))
+if "GITHUB_OUTPUT" in os.environ:
+    github_output = os.environ.get('GITHUB_OUTPUT')
+    os.system("echo commits={0} >> {1}".format(matching_commits, github_output))
 
 # End of file
