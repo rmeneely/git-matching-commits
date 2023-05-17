@@ -61,7 +61,7 @@ done = False
 print("start_commit.hexsha={0}".format(start_commit.hexsha))
 while not done:
     count = 0
-    commits = list(repo.iter_commits('main', max_count=50, skip=count))
+    commits = list(repo.iter_commits(rev='{0}..{1}'.format(start_tag, end_tag), reverse=True, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))'))
     count += len(commits)
     for commit in commits:
         if commit.hexsha == start_commit.hexsha:
