@@ -52,12 +52,11 @@ if Debug:
 # Get all commits between the two tags (not including the start tag)
 # commits = list(repo.iter_commits('{0}..{1}'.format(start_tag, end_tag), reverse=True, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
 done = False
-count = 0
+skip = 0
 matched_commits = []
 while not done:
-    commits = list(repo.iter_commits(max_count=50, skip=count))
-    skip = skip + len(commits)
-    count += skip
+    commits = list(repo.iter_commits(max_count=50, skip=skip))
+    skip += len(commits)
     if Debug:
         print("# of commits={0}".format(len(commits)))
     for commit in commits:
