@@ -12,6 +12,7 @@ from github_action_utils import set_output
 DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
 DefaultEndTagPattern = 'HEAD'
 DefaultCommitMessagePattern = '.*'
+Debug = True
 
 # Arguments
 parser = argparse.ArgumentParser(description='Match Git commits based on matching commit message')
@@ -38,18 +39,27 @@ start_tag = start_tags[-1]
 end_tag = 'HEAD'
 if EndTagPattern != 'HEAD':
     end_tag = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern))
+if Debug:
+    print("start_tag={0}".format(start_tag))
+    print("end_tag={0}".format(end_tag))
 
 # Get all commits between the two tags (not including the start tag)
 commits = list(repo.iter_commits("{0}..{1}".format(start_tag, end_tag)))
+if Debug:
+    print("commits={0}".format(','.join(commits)))
+
+# Get all commits matching the commit message pattern
 matched_commits = []
 for commit in commits:
     if re.search(CommitMessagePattern, commit.message):
         matched_commits.append(commit.hexsha)
 matched_commits.reverse() # Reverse the list so they are in chronological order
+if Debug:
+    print("matched_commits={0}".format(','.join(matched_commits)))
 
 # Return matching commits
 matching_commits = ','.join(matched_commits)
-print("commits={0}".format(','.join(matched_commits)))
+print("commits={0}".format(','.join(matching_commits)))
 set_output('commits', matching_commits)
 
 # End of file
