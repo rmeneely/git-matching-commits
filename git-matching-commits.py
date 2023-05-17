@@ -46,8 +46,8 @@ if Debug:
 
 # Get all commits between the two tags (not including the start tag)
 commits = list(repo.iter_commits("{0}..{1}".format(start_tag, end_tag)))
-if Debug:
-    print("commits={0}".format(','.join(commits)))
+# if Debug:
+#     print("commits={0}".format(','.join(commits)))
 
 # Get all commits matching the commit message pattern
 matched_commits = []
