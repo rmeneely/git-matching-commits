@@ -34,5 +34,5 @@ runs:
         python ${{ github.action_path }}/git-matching-commits.py \
           --start_tag_pattern "${{ inputs.start_tag_pattern }}" \
           --end_tag_pattern "${{ inputs.end_tag_pattern }}" \
-          --commit_message_pattern "${{ inputs.commit_message_pattern }}"
+          --commit_message_pattern "${{ inputs.commit_message_pattern }}"  >> $GITHUB_OUTPUT
       shell: bash

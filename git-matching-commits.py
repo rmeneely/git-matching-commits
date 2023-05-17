@@ -67,8 +67,8 @@ for commit in commits:
 # Return matching commits
 matching_commits = ','.join(matched_commits)
 # os.environ['COMMITS'] = matching_commits
-print("{0}".format(matching_commits))
+print("commits={0}".format(matching_commits))
 # set_output('commits', matching_commits)
-os.system('echo commits={0} >> $GITHUB_OUTPUT'.format(matching_commits))
+# os.system("echo commits={0} >> $GITHUB_OUTPUT'.format(matching_commits))
 
 # End of file
