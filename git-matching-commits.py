@@ -50,23 +50,30 @@ if Debug:
     print("CommitMessagePattern={0}".format(CommitMessagePattern))
 
 # Get all commits between the two tags (not including the start tag)
-commits = list(repo.iter_commits("{0}..{1}".format(start_commit.hexsha, head.hexsha), reverse=True))
+commits = list(git.rev-list("{0}..{1}".format(start_tag, end_tag), reverse=True))
+# commits = list(repo.iter_commits("{0}..{1}".format(start_commit.hexsha, head.hexsha), reverse=True))
 if Debug:
     all_commits = []
+    matched_commits = []
     for commit in commits:
-        print("commit={0}".format(commit.hexsha))
-        print("commit.message={0}".format(commit.message))
-        all_commits.append(commit.hexsha)
+        print("commit={0}".format(commit))
+        all_commits.append(commit)
+        message = git.commit.message(commit)
+        if re.search(CommitMessagePattern, message):
+            matched_commits.append(commit)
+        # print("commit={0}".format(commit.hexsha))
+        # print("commit.message={0}".format(commit.message))
+        # all_commits.append(commit.hexsha)
     print("all_commits={0}".format(','.join(all_commits)))
 
 # Get all commits matching the commit message pattern
-matched_commits = []
-for commit in commits:
-    if re.search(CommitMessagePattern, commit.message):
-        matched_commits.append(commit.hexsha)
-matched_commits.reverse() # Reverse the list so they are in chronological order
-if Debug:
-    print("matched_commits={0}".format(','.join(matched_commits)))
+# matched_commits = []
+# for commit in commits:
+#     if re.search(CommitMessagePattern, commit.message):
+#         matched_commits.append(commit.hexsha)
+# matched_commits.reverse() # Reverse the list so they are in chronological order
+# if Debug:
+#     print("matched_commits={0}".format(','.join(matched_commits)))
 
 # Return matching commits
 matching_commits = ','.join(matched_commits)
