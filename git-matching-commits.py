@@ -70,7 +70,11 @@ matching_commits = ','.join(matched_commits)
 print("commits={0}".format(matching_commits))
 # set_output('commits', matching_commits)
 if "GITHUB_OUTPUT" in os.environ:
+    print("GITHUB_OUTPUT={0}".format(os.environ.get('GITHUB_OUTPUT')))
     github_output = os.environ.get('GITHUB_OUTPUT')
+    f = open('git-matching-commits.output', 'a')
+    f.write("commits={0}\n".format(matching_commits))
+    f.close
     os.system("echo commits={0} >> {1}".format(matching_commits, github_output))
 
 # End of file
