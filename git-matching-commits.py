@@ -13,7 +13,7 @@ DefaultPath = '.'
 DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
 DefaultEndTagPattern = 'HEAD'
 DefaultCommitMessagePattern = '.*'
-Debug = True
+Debug = False
 
 # Arguments
 parser = argparse.ArgumentParser(description='Match Git commits based on matching commit message')
@@ -52,15 +52,8 @@ if Debug:
 # Get all commits between the two tags (not including the start tag)
 commits = list(repo.iter_commits('{0}..{1}'.format(start_tag, end_tag), reverse=True, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
 
-# with open('commits.txt', 'r') as f:
-#     commits = list(f)
-#     commits = [c.strip() for c in commits]
-print("# of commits={0}".format(len(commits)))
 matched_commits = []
 for commit in commits:
-    # commits = list(repo.iter_commits(max_count=50, skip=skip))
-    # skip += len(commits)
-    # theCommit = repo.commit(commit)
     if Debug:
         print("commit={0}".format(commit.hexsha))
     if commit.hexsha == head.hexsha:
@@ -68,21 +61,18 @@ for commit in commits:
     if re.search(CommitMessagePattern, commit.message):
         print("Matched commit={0}".format(commit.hexsha))
         matched_commits.append(commit.hexsha)
-    # if theCommit.hexsha == head.hexsha:
-    #     done = True
-    #     break
 
 # Return matching commits
 matching_commits = ','.join(matched_commits)
-# os.environ['COMMITS'] = matching_commits
 print("commits={0}".format(matching_commits))
-# set_output('commits', matching_commits)
 if "GITHUB_OUTPUT" in os.environ:
-    print("GITHUB_OUTPUT={0}".format(os.environ.get('GITHUB_OUTPUT')))
-    github_output = os.environ.get('GITHUB_OUTPUT')
-    f = open('git-matching-commits.output', 'a')
-    f.write("commits={0}\n".format(matching_commits))
-    f.close
-    os.system("echo commits={0} >> {1}".format(matching_commits, github_output))
+    set_output('commits', matching_commits)
+# if "GITHUB_OUTPUT" in os.environ:
+#     print("GITHUB_OUTPUT={0}".format(os.environ.get('GITHUB_OUTPUT')))
+#     github_output = os.environ.get('GITHUB_OUTPUT')
+#     f = open('git-matching-commits.output', 'a')
+#     f.write("commits={0}\n".format(matching_commits))
+#     f.close
+#     os.system("echo commits={0} >> {1}".format(matching_commits, github_output))
 
 # End of file
