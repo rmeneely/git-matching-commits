@@ -51,14 +51,16 @@ if Debug:
 
 # Get all commits between the two tags (not including the start tag)
 # commits = git.rev_list("{0}..{1}".format(start_tag, end_tag), reverse=True).split('\n')
-commits = list(repo.iter_commits("{0}..{1}".format(start_tag, end_tag), reverse=True))
+commits = subprocess.run(['git', 'rev-list', '{0}..{1}'.format(start_tag, end_tag)], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+# commits = list(repo.iter_commits('main', "{0}..{1}".format(start_tag, end_tag), reverse=True))
 print("Number of commits:", len(commits))
 all_commits = []
 matched_commits = []
-for commit in commits:
+for commitSHA in commits:
+    commit = repo.commit(commitSHA)
     print("commit={0}".format(commit.hexsha))
     print("commit.message={0}".format(commit.message))
-    all_commits.append(commit)
+    all_commits.append(commit.hexsha)
     if re.search(CommitMessagePattern, commit.message):
         matched_commits.append(commit.hexsha)
 
