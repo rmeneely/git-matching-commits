@@ -58,13 +58,14 @@ print("Number of commits:", len(commits))
 all_commits = []
 matched_commits = []
 for commit in commits:
+    print("commit={0}".format(commit))
     # print("commitSHA={0}".format(commitSHA))
     # commit = repo.commit(commitSHA)
-    print("commit={0}".format(commit.hexsha))
-    print("commit.message={0}".format(commit.message))
-    all_commits.append(commit.hexsha)
-    if re.search(CommitMessagePattern, commit.message):
-        matched_commits.append(commit.hexsha)
+    # print("commit={0}".format(commit.hexsha))
+    # print("commit.message={0}".format(commit.message))
+    # all_commits.append(commit.hexsha)
+    # if re.search(CommitMessagePattern, commit.message):
+    #     matched_commits.append(commit.hexsha)
 
     # all_commits.append(commit.hexsha)
 print("all_commits={0}".format(','.join(all_commits)))
