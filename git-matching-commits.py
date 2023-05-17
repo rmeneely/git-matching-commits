@@ -12,7 +12,7 @@ from github_action_utils import set_output
 DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
 DefaultEndTagPattern = 'HEAD'
 DefaultCommitMessagePattern = '.*'
-Debug = False
+Debug = True
 
 # Arguments
 parser = argparse.ArgumentParser(description='Match Git commits based on matching commit message')
@@ -48,18 +48,22 @@ if Debug:
 # if EndTagPattern != 'HEAD':
 #     end_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern))
 #     end_tag = end_tags[-1]
-if Debug:
-    print("start_tag={0}".format(start_tag))
-    print("end_tag={0}".format(end_tag))
-    print("CommitMessagePattern={0}".format(CommitMessagePattern))
 
 # Get all commits between the two tags (not including the start tag)
 commits = list(repo.iter_commits('{0}..{1}'.format(start_tag, end_tag), reverse=True, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
 matched_commits = []
+if Debug:
+    print("start_tag={0}".format(start_tag))
+    print("end_tag={0}".format(end_tag))
+    print("CommitMessagePattern={0}".format(CommitMessagePattern))
+    print("#commits={0}".format(len(commits)))
 for commit in commits:
+    if Debug:
+        print("commit={0}".format(commit.hexsha))
     if commit.hexsha == start_commit.hexsha:
         next # Skip start commit
     if re.search(CommitMessagePattern, commit.message):
+        print("Matched commit={0}".format(commit.hexsha))
         matched_commits.append(commit.hexsha)
     if commit.hexsha == head.hexsha:
         break
@@ -67,7 +71,6 @@ for commit in commits:
 # Return matching commits
 matching_commits = ','.join(matched_commits)
 # os.environ['COMMITS'] = matching_commits
-matching_commits = "aaa,bbb,ccc"
 print("commits={0}".format(matching_commits))
 # set_output('commits', matching_commits)
 if "GITHUB_OUTPUT" in os.environ:
