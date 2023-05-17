@@ -62,7 +62,7 @@ for commit in commits:
     # skip += len(commits)
     theCommit = repo.commit(commit)
     if Debug:
-        print("commit={0}".format(theCommit.hexsha))
+        print("commit={0}".format(commit))
     if theCommit.hexsha == start_commit.hexsha:
         next # Skip start commit
     if re.search(CommitMessagePattern, theCommit.message):

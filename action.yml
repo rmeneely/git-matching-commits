@@ -33,6 +33,8 @@ runs:
     - run: pip install -r requirements.txt
       working-directory: ${{ github.action_path }}
       shell: bash
+    - run: git rev-list "${{ inputs.start_tag_pattern }}..HEAD" > commits.txt
+      shell: bash
     - id: git-matching-commits
       run: >
         python ${{ github.action_path }}/git-matching-commits.py \
