@@ -50,21 +50,21 @@ if Debug:
     print("CommitMessagePattern={0}".format(CommitMessagePattern))
 
 # Get all commits between the two tags (not including the start tag)
-# commits = git.rev_list("{0}..{1}".format(start_tag, end_tag), reverse=True).split('\n')
-cmd = 'git rev-list {0}..{1}'.format(start_tag, end_tag)
-commits = subprocess.run([cmd], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+commits = git.rev_list('{0}..{1}'.format(end_tag, start_tag), reverse=True).split('\n')
+# cmd = 'git rev-list {0}..{1}'.format(start_tag, end_tag)
+# commits = subprocess.run([cmd], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
 # commits = list(repo.iter_commits('main', "{0}..{1}".format(start_tag, end_tag), reverse=True))
 print("Number of commits:", len(commits))
 all_commits = []
 matched_commits = []
-for commitSHA in commits:
-    print("commitSHA={0}".format(commitSHA))
+for commit in commits:
+    # print("commitSHA={0}".format(commitSHA))
     # commit = repo.commit(commitSHA)
-    # print("commit={0}".format(commit.hexsha))
-    # print("commit.message={0}".format(commit.message))
-    # all_commits.append(commit.hexsha)
-    # if re.search(CommitMessagePattern, commit.message):
-    #     matched_commits.append(commit.hexsha)
+    print("commit={0}".format(commit.hexsha))
+    print("commit.message={0}".format(commit.message))
+    all_commits.append(commit.hexsha)
+    if re.search(CommitMessagePattern, commit.message):
+        matched_commits.append(commit.hexsha)
 
     # all_commits.append(commit.hexsha)
 print("all_commits={0}".format(','.join(all_commits)))
