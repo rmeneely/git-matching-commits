@@ -35,5 +35,5 @@ runs:
           --start_tag_pattern "${{ inputs.start_tag_pattern }}" \
           --end_tag_pattern "${{ inputs.end_tag_pattern }}" \
           --commit_message_pattern "${{ inputs.commit_message_pattern }}"
-        echo "commits=XXX" >> $GITHUB_OUTPUT
+        cat git-matching-commits.output >> $GITHUB_OUTPUT
       shell: bash
