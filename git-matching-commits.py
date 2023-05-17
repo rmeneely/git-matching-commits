@@ -51,7 +51,8 @@ if Debug:
 
 # Get all commits between the two tags (not including the start tag)
 # commits = git.rev_list("{0}..{1}".format(start_tag, end_tag), reverse=True).split('\n')
-commits = subprocess.run(['git', 'rev-list', '{0}..{1}'.format(start_tag, end_tag)], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+cmd = 'git rev-list {0}..{1}'.format(start_tag, end_tag)
+commits = subprocess.run([cmd], stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
 # commits = list(repo.iter_commits('main', "{0}..{1}".format(start_tag, end_tag), reverse=True))
 print("Number of commits:", len(commits))
 all_commits = []
