@@ -67,6 +67,7 @@ for commit in commits:
 # Return matching commits
 matching_commits = ','.join(matched_commits)
 # os.environ['COMMITS'] = matching_commits
+matching_commits = "aaa,bbb,ccc"
 print("commits={0}".format(matching_commits))
 # set_output('commits', matching_commits)
 if "GITHUB_OUTPUT" in os.environ:
