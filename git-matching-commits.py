@@ -37,8 +37,9 @@ git = repo.git
 start_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(StartTagPattern)).split('\n')
 start_tag = start_tags[-1]
 end_tag = 'HEAD'
-if EndTagPattern != 'HEAD':
-    end_tag = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern))
+# if EndTagPattern != 'HEAD':
+#     end_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern))
+#     end_tag = end_tags[-1]
 if Debug:
     print("start_tag={0}".format(start_tag))
     print("end_tag={0}".format(end_tag))
