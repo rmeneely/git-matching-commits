@@ -57,13 +57,21 @@ tag = start_tag
 # commits = list(repo.iter_commits('main', "{0}..{1}".format(start_tag, end_tag), reverse=True))
 matched_commits = []
 commits = []
+done = False
+print("start_commit.hexsha={0}".format(start_commit.hexsha))
+while not done:
+    count = 0
+    commits = list(repo.iter_commits('main', max_count=50, skip=count))
+    count += len(commits)
+    for commit in commits:
+        if commit.hexsha == start_commit.hexsha:
+            done = True
+            break
+        print("commit={0}".format(commit.hexsha))
+        if re.search(CommitMessagePattern, commit.message):
+            matched_commits.append(commit.hexsha)
 
-for commit in repo.iter_commits():
-    if commit.hexsha == start_commit.hexsha:
-        break
-    print("commit={0}".format(commit.hexsha))
-    if re.search(CommitMessagePattern, commit.message):
-        matched_commits.append(commit.hexsha)
+
 
     # commits = list(repo.iter_commits('main', max_count=len(commits), paths=None, reverse=True, since=start_commit))
     # if len(commits) > 0:
