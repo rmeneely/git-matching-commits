@@ -20,6 +20,9 @@ inputs:
   commit_message_pattern:
     description: A regex to match commit messages
     required: true
+  pr_labels:
+    description: List of Pull Request labels to match
+    required: false
 outputs:
   commits:
     description: 'Returns a comma separated list of found <commit> values'
@@ -39,5 +42,6 @@ runs:
           --path "${{ inputs.path }}" \
           --start_tag_pattern "${{ inputs.start_tag_pattern }}" \
           --end_tag_pattern "${{ inputs.end_tag_pattern }}" \
-          --commit_message_pattern "${{ inputs.commit_message_pattern }}"
+          --commit_message_pattern "${{ inputs.commit_message_pattern }}" \
+          --pr_labels "${{ inputs.pr_labels }}"
       shell: bash
