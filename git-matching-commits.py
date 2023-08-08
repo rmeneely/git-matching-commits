@@ -111,17 +111,24 @@ def main():
         print("start_tag={0}".format(start_tag))
         print("start_commit={0}".format(start_commit))
         print("end_tag={0}".format(end_tag))
+        print("")
 
 	# Get matching Pull Requests within the start and end range
     HotFixPRs = get_matching_commits(git.log("--merges", "{}..{}".format(start_tag, end_tag)), CommitMessagePattern)
+    if Verbose:
+        print("HotFixPRs={0}\n".format(HotFixPRs))
     for pr in HotFixPRs:
         pr_commit = extract_commit_value(pr)
-        range = extract_merge_values(pr)
         matched_commits.append(pr_commit)
-        # Add all commits within the PR range
-        tmpCommits = list(repo.iter_commits('{0}..{1}'.format(range[0], range[1]), reverse=False, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
-        for tmpCommit in tmpCommits:
-            matched_commits.append(tmpCommit.hexsha)
+        # range = extract_merge_values(pr)
+        # matched_commits.append(pr_commit)
+        # # Add all commits within the PR range
+        # tmpCommits = list(repo.iter_commits('{0}..{1}'.format(range[0], range[1]), reverse=False, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
+        # if Verbose:
+        #     print("list(repo.iter_commits('{0}..{1}',  committer=None))".format(range[0], range[1]))
+        #     print("tmpCommits={0}\n".format(tmpCommits))
+        # for tmpCommit in tmpCommits:
+        #     matched_commits.append(tmpCommit.hexsha)
     matched_commits.reverse()
 
 	# Return matching commits
