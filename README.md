@@ -29,7 +29,7 @@ All inputs are optional. If not set the default value will be used.
 
 ## Examples
 ```yaml
-    # Returns a string containing all individual commits within merged/PR where the merged commit message contains the text [Hotfix] (case-insensative)
+    # Returns a string containing all matching merged commits where the merged commit message contains the text [Hotfix] (case-insensative)
     # The range of merged commits is between the latest commit with tag matching the start tag pattern and the current branch HEAD
     - uses: rmeneely/git-matching-commits@v2
       id: git-matching-commits
