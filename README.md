@@ -43,9 +43,19 @@ All inputs are optional. If not set the default value will be used.
 
 ## Output
 ```shell
-steps.git-matching-commits.outputs.commits - Set to space separated list of matched commit SHAs
+steps.git-matching-commits.outputs.commits      - Set to space separated list of matched commit SHAs
+steps.git-matching-commits.outputs.count        - The number of matched commits
+steps.git-matching-commits.outputs.first_commit - The first commitSHA in the list
+steps.git-matching-commits.outputs.last_commit  - The last commitSHA in the list
 
-Example: f9e96e6afbf893795c3c5f44d968b19fa51925cc e5b84631f0824d9e8c57d44893abdae96917aab9 186e65812e63c80fbf3690723454ebc5f09fb05b 0f3e43604075eafe0a432cc4d4f1bb421aa800c3 285f45cb9871d3b6cf9758700f85fb51436dbcd2
+Example:
+steps.git-matching-commits.outputs.commits=f9e96e6afbf893795c3c5f44d968b19fa51925cc e5b84631f0824d9e8c57d44893abdae96917aab9 186e65812e63c80fbf3690723454ebc5f09fb05b 0f3e43604075eafe0a432cc4d4f1bb421aa800c3 285f45cb9871d3b6cf9758700f85fb51436dbcd2
+
+steps.git-matching-commits.outputs.count=5
+
+steps.git-matching-commits.outputs.first_commit=f9e96e6afbf893795c3c5f44d968b19fa51925cc
+
+steps.git-matching-commits.outputs.last_commit=285f45cb9871d3b6cf9758700f85fb51436dbcd2
 ```
 
 ## License

@@ -25,8 +25,17 @@ inputs:
     required: false
 outputs:
   commits:
-    description: 'Returns a comma separated list of found <commit> values'
+    description: 'Returns a space separated list of found commitSHA values'
     value: ${{ steps.git-matching-commits.outputs.commits }}
+  count:
+    description: 'Returns the number of commits found'
+    value: ${{ steps.git-matching-commits.outputs.count }}
+  first_commit:
+    description: 'Returns the first commitSHA found'
+    value: ${{ steps.git-matching-commits.outputs.first_commit }}
+  last_commit:
+    description: 'Returns the last commitSHA found'
+    value: ${{ steps.git-matching-commits.outputs.last_commit }}
 runs:
   using: "composite"
   steps:
