@@ -17,6 +17,8 @@ def parse_args():
     parser.add_argument('--start_tag_pattern', type=str, help='Start tag pattern')
     parser.add_argument('--end_tag_pattern', type=str, help='End tag pattern')
     parser.add_argument('--commit_message_pattern', type=str, help='Commit message pattern')
+    parser.add_argument('--commit_type', type=str, help='Commit type')
+    parser.add_argument('--cherry_pick', action="store_true", help='Cherry-pick matching commits')
     parser.add_argument('--pr_labels', type=str, help='Pull Request labels')
     parser.add_argument('--verbose', action="store_true", help='Verbose output')
     args = parser.parse_args()
@@ -30,8 +32,7 @@ def split_commits(text):
         _commits.append("commit " + commit)
     return _commits
 
-def get_matching_commits(text, commit_message_pattern):
-    commits = split_commits(text)
+def get_matching_commits(commits, commit_message_pattern):
     hotfix_commits = []
     for commit in commits:
         if re.search(commit_message_pattern, commit, re.IGNORECASE):
@@ -74,68 +75,88 @@ def extract_commit_value(string):
 
 def main():
     # Default values
-    DefaultPath = '.'
-    DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
-    DefaultEndTagPattern = 'HEAD'
-    DefaultCommitMessagePattern = '.*'
-    DefaultPullRequestLabels = []
-    DefaultVerbose = False
+    # DefaultPath = '.'
+    # DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
+    # DefaultEndTagPattern = 'HEAD'
+    # DefaultCommitMessagePattern = '.*'
+    # DefaultPullRequestLabels = []
+    # DefaultVerbose = False
+    Default = {
+        'path': '.',
+        'start_tag_pattern': 'v[0-9]+.[0-9]+.[0-9]+',
+        'end_tag_pattern': 'HEAD',
+        'commit_message_pattern': '.*',
+        'commit_type': 'merge',
+        'cherry_pick': False,
+        'pr_labels': [],
+        'verbose': False
+    }
 
     # Get arguments
     args = parse_args()
 
 	# Global variables
-    StartTagPattern = args.start_tag_pattern if (args.start_tag_pattern != None) else DefaultStartTagPattern
-    EndTagPattern = args.end_tag_pattern if (args.end_tag_pattern != None) else DefaultEndTagPattern
-    CommitMessagePattern = args.commit_message_pattern if (args.commit_message_pattern != None) else DefaultCommitMessagePattern
-    PullRequestLabels = args.pr_labels.split(',') if (args.pr_labels != None) else DefaultPullRequestLabels
-    repo_path = args.path if (args.path != None) else DefaultPath
+    Global = Default    # Set Global to Default values
+    StartTagPattern = args.start_tag_pattern if (args.start_tag_pattern != None) else Default['start_tag_pattern']
+    EndTagPattern = args.end_tag_pattern if (args.end_tag_pattern != None) else Default['end_tag_pattern']
+    CommitMessagePattern = args.commit_message_pattern if (args.commit_message_pattern != None) else Default['commit_message_pattern']
+    CommitType = args.commit_type if (args.commit_type != None) else Default['commit_type']
+    CherryPick = True if args.cherry_pick else Default['cherry_pick']
+    PullRequestLabels = args.pr_labels.split(',') if (args.pr_labels != None) else Default['pr_labels']
+    RepoPath = args.path if (args.path != None) else Default['path']
+    Verbose = True if args.verbose else Default['verbose']
     matched_commits = []
-    if args.verbose:
-        Verbose = True
-    else:
-	    Verbose = False
 
     # Open the Git repository
-    repo = Repo(repo_path)
+    repo = Repo(RepoPath)
     git = repo.git
 
 	# Get most recent matching tags
     start_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(StartTagPattern)).split('\n')
-    if Verbose:
-        print("git tag --sort=committerdate --list {}".format(StartTagPattern))
-        print("start_tags={}".format(start_tags))
     start_tag = start_tags[-1]
     start_commit = repo.tags[start_tag].commit
-    end_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern)).split('\n')
-    end_tag = end_tags[-1]
-    end_commit = repo.tags[end_tag].commit
+    end_tag = ''
+    if EndTagPattern == 'HEAD':
+        end_commit = repo.head.commit
+        end_tag = 'HEAD'
+    else:
+        end_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(EndTagPattern)).split('\n')
+        end_tag = end_tags[-1]
+        end_commit = repo.tags[end_tag].commit
     head = repo.head.commit
     if Verbose:
+        print("Settings:")
         print("start_tag={0}".format(start_tag))
         print("start_commit={0}".format(start_commit))
         print("end_tag={0}".format(end_tag))
+        print("end_commit={0}".format(end_commit))
+        print("CherryPick={0}".format(CherryPick))
         print("")
 
 	# Get matching Pull Requests within the start and end range
-    HotFixPRs = get_matching_commits(git.log("--merges", "{}..{}".format(start_tag, end_tag)), CommitMessagePattern)
+    merged_commits = split_commits(git.log("--merges", "{}..{}".format(start_tag, end_tag)))
+    merged_commits.reverse()
+    HotFixPRs = get_matching_commits(merged_commits, CommitMessagePattern)
     if Verbose:
         print("git log --merges {}..{}".format(start_tag, end_tag))
         print("HotFixPRs={0}\n".format(HotFixPRs))
 
     for pr in HotFixPRs:
         pr_commit = extract_commit_value(pr)
-        # range = extract_merge_values(pr)
-        # matched_commits.append(pr_commit)
-        # Add all commits within the PR range
-        # PRCommits = list(repo.iter_commits('{0}..{1}'.format(range[0], range[1]), reverse=False, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
-        # if Verbose:
-        #     print("list(repo.iter_commits('{0}..{1}')".format(range[0], range[1]))
-        #     print("PRCommits={0}\n".format(PRCommits))
-        # for commit in PRCommits:
-        #     matched_commits.append(commit.hexsha)
+        if CommitType == 'all':
+            range = extract_merge_values(pr)
+            _commits = list(repo.iter_commits('{0}..{1}'.format(range[0], range[1]), reverse=False, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
+            for commit in _commits:
+                if CherryPick:
+                    #git.cherry_pick("{}".format(commit.hexsha))
+                    #print("git.cherry_pick(\"{}\")".format(commit.hexsha))
+                    nothing = 0
+                matched_commits.append(commit.hexsha)
+        if CherryPick:
+            #git.cherry_pick("-m 1", "{}".format(pr_commit))
+            #print("git.cherry_pick(\"-m 1\", \"{}\"".format(pr_commit))
+            nothing = 0
         matched_commits.append(pr_commit)
-    #matched_commits.reverse()
 
 	# Return matching commits
     matching_commits = ' '.join(matched_commits)
