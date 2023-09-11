@@ -20,8 +20,17 @@ inputs:
   commit_message_pattern:
     description: A regex to match commit messages
     required: true
-  pr_labels:
-    description: List of Pull Request labels to match
+  github_labels:
+    description: Comma separated List of GitHub Pull Request labels to match
+    default: ''
+    required: false
+  github_repository:
+    description: <organization>/<repository> to search for Pull Requests
+    default: ''
+    required: false
+  github_token:
+    description: GitHub token to use for API calls
+    default: ''
     required: false
 outputs:
   commits:
@@ -52,5 +61,7 @@ runs:
           --start_tag_pattern "${{ inputs.start_tag_pattern }}" \
           --end_tag_pattern "${{ inputs.end_tag_pattern }}" \
           --commit_message_pattern "${{ inputs.commit_message_pattern }}" \
-          --pr_labels "${{ inputs.pr_labels }}"
+          --github_labels "${{ inputs.github_labels }}" \
+          --github_repository "${{ inputs.github_repository }}" \
+          --github_token "${{ inputs.github_token }}"
       shell: bash

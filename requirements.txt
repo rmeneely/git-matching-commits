@@ -3,3 +3,5 @@
 GitPython
 github_action_utils
 Repo
+PyGithub
+requests

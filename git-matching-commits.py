@@ -5,10 +5,18 @@ import argparse
 import re
 import os
 import subprocess
+import requests
 # See https://gitpython.readthedocs.io/en/stable/tutorial.html
 from git import Repo
 from github_action_utils import set_output
+from github import Github
+from github import Auth
 
+
+# Global variables
+GitHubRepository = ''
+GitHubToken = ''
+GitHubLabels = []
 
 def parse_args():
     # Arguments
@@ -19,7 +27,9 @@ def parse_args():
     parser.add_argument('--commit_message_pattern', type=str, help='Commit message pattern')
     parser.add_argument('--commit_type', type=str, help='Commit type')
     parser.add_argument('--cherry_pick', action="store_true", help='Cherry-pick matching commits')
-    parser.add_argument('--pr_labels', type=str, help='Pull Request labels')
+    parser.add_argument('--github_labels', type=str, help='GitHub labels to match')
+    parser.add_argument('--github_repository', type=str, help='GitHub repository')
+    parser.add_argument('--github_token', type=str, help='GitHub token')
     parser.add_argument('--verbose', action="store_true", help='Verbose output')
     args = parser.parse_args()
     return args
@@ -32,11 +42,48 @@ def split_commits(text):
         _commits.append("commit " + commit)
     return _commits
 
+def get_github_labels(commit_sha):
+    global GitHubRepository
+    global GitHubToken
+    labels = []
+
+    # Construct the API URL
+    url = "https://api.github.com/repos/{0}/commits/{1}/pulls".format(GitHubRepository, commit_sha)
+
+    # Set the headers with the access token
+    headers = {
+        'Authorization': 'Bearer {0}'.format(GitHubToken),
+        'Accept': 'application/vnd.github.v3+json'
+    }
+
+    # Send a GET request to the API
+    response = requests.get(url, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Extract the labels from the response
+        _labels = response.json()[0]['labels']
+        for label in _labels:
+            labels.append(label['name'])
+        return labels
+    else:
+        # Handle the error case
+        print(f'Error: {response.status_code}')
+        return None
+
 def get_matching_commits(commits, commit_message_pattern):
+    global GitHubLabels
     hotfix_commits = []
     for commit in commits:
         if re.search(commit_message_pattern, commit, re.IGNORECASE):
             hotfix_commits.append(commit)
+        elif GitHubToken != '': # Check GitHub labels
+            commitSha = extract_commit_value(commit)
+            github_labels = get_github_labels(commitSha)
+            for label in GitHubLabels:
+                if label in github_labels:
+                    hotfix_commits.append(commit)
+                    break
     return hotfix_commits
 
 def get_pr_commit_range(pull_request):
@@ -74,13 +121,10 @@ def extract_commit_value(string):
     return commit_value
 
 def main():
-    # Default values
-    # DefaultPath = '.'
-    # DefaultStartTagPattern = 'v[0-9]+.[0-9]+.[0-9]+'
-    # DefaultEndTagPattern = 'HEAD'
-    # DefaultCommitMessagePattern = '.*'
-    # DefaultPullRequestLabels = []
-    # DefaultVerbose = False
+    # Global variables
+    global GitHubRepository
+    global GitHubToken
+    global GitHubLabels
     Default = {
         'path': '.',
         'start_tag_pattern': 'v[0-9]+.[0-9]+.[0-9]+',
@@ -88,8 +132,11 @@ def main():
         'commit_message_pattern': '.*',
         'commit_type': 'merge',
         'cherry_pick': False,
-        'pr_labels': [],
-        'verbose': False
+        'github_labels': [],
+        'github_repository': '',
+        'github_token': '',
+        'verbose': False,
+        'auth': None
     }
 
     # Get arguments
@@ -102,24 +149,32 @@ def main():
     CommitMessagePattern = args.commit_message_pattern if (args.commit_message_pattern != None) else Default['commit_message_pattern']
     CommitType = args.commit_type if (args.commit_type != None) else Default['commit_type']
     CherryPick = True if args.cherry_pick else Default['cherry_pick']
-    PullRequestLabels = args.pr_labels.split(',') if (args.pr_labels != None) else Default['pr_labels']
+    GitHubLabels = args.github_labels.split(',') if (args.github_labels != None) else Default['github_labels']
     RepoPath = args.path if (args.path != None) else Default['path']
+    GitHubRepository = args.github_repository if (args.github_repository != None) else Default['github_repository']
+    GitHubToken = args.github_token if (args.github_token != None) else Default['github_token']
     Verbose = True if args.verbose else Default['verbose']
     matched_commits = []
+    # Auth = Default['auth']
 
     # Open the Git repository
     repo = Repo(RepoPath)
     git = repo.git
 
+    # Authenticate with GitHub
+    # if Token != '':
+    #     print("Token={0}".format(Token))
+    #     Auth = Auth.Token(Token)
+
 	# Get most recent matching tags
     start_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(StartTagPattern)).split('\n')
     if len(start_tags) > 0:
-        print("start_tags={0}".format(start_tags))
+        #print("start_tags={0}".format(start_tags))
         start_tag = start_tags[-1]
         if start_tag != '':
-            print("start_tag={0}".format(start_tag))
+            #print("start_tag={0}".format(start_tag))
             start_commit = repo.tags[start_tag].commit
-            print("start_commit={0}".format(start_commit))
+            #print("start_commit={0}".format(start_commit))
             end_tag = ''
             if EndTagPattern == 'HEAD':
                 end_commit = repo.head.commit
