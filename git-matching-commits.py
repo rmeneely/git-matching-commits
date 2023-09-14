@@ -17,6 +17,7 @@ from github import Auth
 GitHubRepository = ''
 GitHubToken = ''
 GitHubLabels = []
+CommitType = ''
 
 def parse_args():
     # Arguments
@@ -26,7 +27,6 @@ def parse_args():
     parser.add_argument('--end_tag_pattern', type=str, help='End tag pattern')
     parser.add_argument('--commit_message_pattern', type=str, help='Commit message pattern')
     parser.add_argument('--commit_type', type=str, help='Commit type')
-    parser.add_argument('--cherry_pick', action="store_true", help='Cherry-pick matching commits')
     parser.add_argument('--github_labels', type=str, help='GitHub labels to match')
     parser.add_argument('--github_repository', type=str, help='GitHub repository')
     parser.add_argument('--github_token', type=str, help='GitHub token')
@@ -62,29 +62,50 @@ def get_github_labels(commit_sha):
     # Check if the request was successful
     if response.status_code == 200:
         # Extract the labels from the response
-        _labels = response.json()[0]['labels']
-        for label in _labels:
-            labels.append(label['name'])
-        return labels
+        _json = response.json()
+        if _json and len(_json) > 0:
+            _labels = response.json()[0]['labels']
+            for label in _labels:
+                labels.append(label['name'])
+            return labels
+        else:
+            return []
     else:
         # Handle the error case
         print(f'Error: {response.status_code}')
-        return None
+        return []
 
 def get_matching_commits(commits, commit_message_pattern):
     global GitHubLabels
     hotfix_commits = []
     for commit in commits:
-        if re.search(commit_message_pattern, commit, re.IGNORECASE):
+        if commit.type != 'commit': # Only process commits
+            continue
+        if (CommitType in ['merge']) and (commit.parents and len(commit.parents) < 2): # Merge commits
+            continue
+        if re.search(commit_message_pattern, commit.message, re.IGNORECASE):
             hotfix_commits.append(commit)
         elif GitHubToken != '': # Check GitHub labels
-            commitSha = extract_commit_value(commit)
-            github_labels = get_github_labels(commitSha)
+            github_labels = get_github_labels(commit.hexsha)
             for label in GitHubLabels:
                 if label in github_labels:
                     hotfix_commits.append(commit)
-                    break
+                    continue
     return hotfix_commits
+
+def get_merge_commits(repo, commitSHA):
+    merge_commits = []
+    commits = list(repo.iter_commits(max_count=100))
+    for commit in commits:
+        if commitSHA == commit.hexsha:
+            break
+        else:
+            merge_commits.append(commit)
+    return merge_commits
+
+def get_commitSHA_for_tag(repo, tag_name):
+    commitSHA = repo.tags[tag_name].commit.hexsha
+    return commitSHA
 
 def get_pr_commit_range(pull_request):
     commit = ''
@@ -125,13 +146,13 @@ def main():
     global GitHubRepository
     global GitHubToken
     global GitHubLabels
+    global CommitType
     Default = {
         'path': '.',
         'start_tag_pattern': 'v[0-9]+.[0-9]+.[0-9]+',
         'end_tag_pattern': 'HEAD',
         'commit_message_pattern': '.*',
         'commit_type': 'merge',
-        'cherry_pick': False,
         'github_labels': [],
         'github_repository': '',
         'github_token': '',
@@ -148,7 +169,6 @@ def main():
     EndTagPattern = args.end_tag_pattern if (args.end_tag_pattern != None) else Default['end_tag_pattern']
     CommitMessagePattern = args.commit_message_pattern if (args.commit_message_pattern != None) else Default['commit_message_pattern']
     CommitType = args.commit_type if (args.commit_type != None) else Default['commit_type']
-    CherryPick = True if args.cherry_pick else Default['cherry_pick']
     GitHubLabels = args.github_labels.split(',') if (args.github_labels != None) else Default['github_labels']
     RepoPath = args.path if (args.path != None) else Default['path']
     GitHubRepository = args.github_repository if (args.github_repository != None) else Default['github_repository']
@@ -161,20 +181,12 @@ def main():
     repo = Repo(RepoPath)
     git = repo.git
 
-    # Authenticate with GitHub
-    # if Token != '':
-    #     print("Token={0}".format(Token))
-    #     Auth = Auth.Token(Token)
-
 	# Get most recent matching tags
     start_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(StartTagPattern)).split('\n')
     if len(start_tags) > 0:
-        #print("start_tags={0}".format(start_tags))
         start_tag = start_tags[-1]
         if start_tag != '':
-            #print("start_tag={0}".format(start_tag))
             start_commit = repo.tags[start_tag].commit
-            #print("start_commit={0}".format(start_commit))
             end_tag = ''
             if EndTagPattern == 'HEAD':
                 end_commit = repo.head.commit
@@ -190,33 +202,17 @@ def main():
                 print("start_commit={0}".format(start_commit))
                 print("end_tag={0}".format(end_tag))
                 print("end_commit={0}".format(end_commit))
-                print("CherryPick={0}".format(CherryPick))
                 print("")
 
         	# Get matching Pull Requests within the start and end range
-            merged_commits = split_commits(git.log("--merges", "{}..{}".format(start_tag, end_tag)))
+            merged_commits = get_merge_commits(repo, start_commit.hexsha)
             merged_commits.reverse()
             HotFixPRs = get_matching_commits(merged_commits, CommitMessagePattern)
             if Verbose:
-                print("git log --merges {}..{}".format(start_tag, end_tag))
                 print("HotFixPRs={0}\n".format(HotFixPRs))
 
             for pr in HotFixPRs:
-                pr_commit = extract_commit_value(pr)
-                if CommitType == 'all':
-                    range = extract_merge_values(pr)
-                    _commits = list(repo.iter_commits('{0}..{1}'.format(range[0], range[1]), reverse=False, paths=None, since=None, until=None, author=None, committer=None, message=None, name_only=False))
-                    for commit in _commits:
-                        if CherryPick:
-                            #git.cherry_pick("{}".format(commit.hexsha))
-                            #print("git.cherry_pick(\"{}\")".format(commit.hexsha))
-                            nothing = 0
-                        matched_commits.append(commit.hexsha)
-                if CherryPick:
-                    #git.cherry_pick("-m 1", "{}".format(pr_commit))
-                    #print("git.cherry_pick(\"-m 1\", \"{}\"".format(pr_commit))
-                    nothing = 0
-                matched_commits.append(pr_commit)
+                matched_commits.append(pr.hexsha)
 
 	# Return matching commits
     matching_commits = ' '.join(matched_commits)
