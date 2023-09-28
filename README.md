@@ -26,8 +26,9 @@ All inputs are optional. If not set the default value will be used.
 | end_tag_pattern        | regex expression to match the ending tag    | HEAD |
 | commit_message_pattern | regex expression to match a returned commit | .* |
 | github_labels | Comma separated list of GitHub labels used to identify matching commit | none |
-| github_repository | \<owner>/\<repository> - Required if gethub_labels is set | none  |
-| github_token | GitHub token - Required if gethub_labels is set | none |
+| github_repository | \<owner>/\<repository> - Required if either `gethub_labels` or `release_notes_file` is set | none  |
+| github_token | GitHub token - Required if either `gethub_labels` or `release_notes_file` is set | none |
+| release_notes_file | Write release notes to filename | none |
 
 ## Examples
 ```yaml
@@ -48,6 +49,7 @@ Matches either a string within the merged commit, or a GitHub Pull Request label
     Has a PR title containing the text [Hotfix] (case-insensative). The range of merged commits is between the latest commit with tag matching the start tag pattern and the current branch HEAD
      OR
     The merged commit Pull Request has a GitHub Pull Request label of 'hotfix'
+    Creates a file named release-notes containing the GitHub PR release notes for matching commits
     - uses: rmeneely/git-matching-commits@v2
       id: git-matching-commits
       with:
@@ -56,6 +58,7 @@ Matches either a string within the merged commit, or a GitHub Pull Request label
         github_labels: hotfix
         github_repository: myorganization/myrepo
         github_token: ${ secrets.GITHUB_TOKEN }
+        release_notes_file: release-notes
     - name: Get matched commits
       run: echo "MATCHED_COMMITS=${{ steps.git-matching-commits.outputs.commits }}" >> $GITHUB_ENV
 ```

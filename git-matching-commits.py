@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument('--github_labels', type=str, help='GitHub labels to match')
     parser.add_argument('--github_repository', type=str, help='GitHub repository')
     parser.add_argument('--github_token', type=str, help='GitHub token')
+    parser.add_argument('--release_notes_file', type=str, help='Release notes file')
     parser.add_argument('--verbose', action="store_true", help='Verbose output')
     args = parser.parse_args()
     return args
@@ -141,6 +142,46 @@ def extract_commit_value(string):
     commit_value = string[commit_index:].split()[0]
     return commit_value
 
+def get_pr_release_note(commit_sha):
+    global GitHubRepository
+    global GitHubToken
+
+    # Construct the API URL
+    url = "https://api.github.com/repos/{0}/commits/{1}/pulls".format(GitHubRepository, commit_sha)
+
+    # Set the headers with the access token
+    headers = {
+        'Authorization': 'Bearer {0}'.format(GitHubToken),
+        'Accept': 'application/vnd.github.v3+json'
+    }
+
+    # Send a GET request to the API
+    response = requests.get(url, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Extract the labels from the response
+        _json = response.json()
+        if _json and len(_json) > 0:
+            _title = response.json()[0]['title']
+            _user = response.json()[0]['user']['login']
+            _url = response.json()[0]['url']
+            release_note = f"* {_title} by {_user} in {_url}"
+            return release_note
+        else:
+            return ''
+    else:
+        # Handle the error case
+        print(f'Error: {response.status_code}')
+        return ''
+
+def get_pr_release_notes(commits):
+    pr_release_notes = []
+    for commit in commits:
+        release_note = get_pr_release_note(commit.hexsha)
+        pr_release_notes.append(release_note)
+    return pr_release_notes
+
 def main():
     # Global variables
     global GitHubRepository
@@ -156,6 +197,7 @@ def main():
         'github_labels': [],
         'github_repository': '',
         'github_token': '',
+        'release_notes_file': '',
         'verbose': False,
         'auth': None
     }
@@ -173,13 +215,19 @@ def main():
     RepoPath = args.path if (args.path != None) else Default['path']
     GitHubRepository = args.github_repository if (args.github_repository != None) else Default['github_repository']
     GitHubToken = args.github_token if (args.github_token != None) else Default['github_token']
+    ReleaseNotesFile = args.release_notes_file if (args.release_notes_file != None) else Default['release_notes_file']
     Verbose = True if args.verbose else Default['verbose']
     matched_commits = []
+    releaseNotes = []
     # Auth = Default['auth']
 
     # Open the Git repository
     repo = Repo(RepoPath)
     git = repo.git
+
+    # Create a GitHub instance
+    gh = Github(GitHubToken)
+    gh_repo = gh.get_repo(GitHubRepository)
 
 	# Get most recent matching tags
     start_tags = git.tag('--sort=committerdate', '--list', '{0}'.format(StartTagPattern)).split('\n')
@@ -207,12 +255,22 @@ def main():
         	# Get matching Pull Requests within the start and end range
             merged_commits = get_merge_commits(repo, start_commit.hexsha)
             merged_commits.reverse()
-            HotFixPRs = get_matching_commits(merged_commits, CommitMessagePattern)
+            hotFixCommits = get_matching_commits(merged_commits, CommitMessagePattern)
+            if ReleaseNotesFile != '' and GitHubToken != '':
+                releaseNotes = get_pr_release_notes(hotFixCommits)
             if Verbose:
-                print("HotFixPRs={0}\n".format(HotFixPRs))
+                print("HotFixPRs={0}\n".format(hotFixCommits))
 
-            for pr in HotFixPRs:
+            for pr in hotFixCommits:
                 matched_commits.append(pr.hexsha)
+
+    # Create release notes file
+    if ReleaseNotesFile != '' and GitHubToken != '':
+        with open(ReleaseNotesFile, 'w') as f:
+            f.write("## What's Changed\\n")
+            for releaseNote in releaseNotes:
+                f.write(releaseNote + "\\n")
+        f.close()
 
 	# Return matching commits
     matching_commits = ' '.join(matched_commits)

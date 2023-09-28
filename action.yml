@@ -32,6 +32,10 @@ inputs:
     description: GitHub token to use for API calls
     default: ''
     required: false
+  release_notes_file:
+    description: GitHub release notes file
+    default: ''
+    required: false
 outputs:
   commits:
     description: 'Returns a space separated list of found commitSHA values'
@@ -63,5 +67,6 @@ runs:
           --commit_message_pattern "${{ inputs.commit_message_pattern }}" \
           --github_labels "${{ inputs.github_labels }}" \
           --github_repository "${{ inputs.github_repository }}" \
-          --github_token "${{ inputs.github_token }}"
+          --github_token "${{ inputs.github_token }}" \
+          --release_notes_file "${{ inputs.release_notes_file }}"
       shell: bash
