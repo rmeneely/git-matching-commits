@@ -20,6 +20,10 @@ inputs:
   commit_message_pattern:
     description: A regex to match commit messages
     required: true
+  commit_type:
+    description: The type of commit to match - merge|all
+    default: 'merge'
+    required: false
   github_labels:
     description: Comma separated List of GitHub Pull Request labels to match
     default: ''
@@ -65,6 +69,7 @@ runs:
           --start_tag_pattern "${{ inputs.start_tag_pattern }}" \
           --end_tag_pattern "${{ inputs.end_tag_pattern }}" \
           --commit_message_pattern "${{ inputs.commit_message_pattern }}" \
+          --commit_type "${{ inputs.commit_type }}" \
           --github_labels "${{ inputs.github_labels }}" \
           --github_repository "${{ inputs.github_repository }}" \
           --github_token "${{ inputs.github_token }}" \

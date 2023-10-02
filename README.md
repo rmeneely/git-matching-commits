@@ -25,6 +25,7 @@ All inputs are optional. If not set the default value will be used.
 | start_tag_pattern      | regex expression to match the starting tag  | v[0-9]*.[0-9]*.[0-9] |
 | end_tag_pattern        | regex expression to match the ending tag    | HEAD |
 | commit_message_pattern | regex expression to match a returned commit | .* |
+| commit_type            | The type of commits to match (`merge`, `all`)    | merge |
 | github_labels | Comma separated list of GitHub labels used to identify matching commit | none |
 | github_repository | \<owner>/\<repository> - Required if either `gethub_labels` or `release_notes_file` is set | none  |
 | github_token | GitHub token - Required if either `gethub_labels` or `release_notes_file` is set | none |
