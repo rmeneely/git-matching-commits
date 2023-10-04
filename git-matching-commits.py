@@ -179,7 +179,8 @@ def get_pr_release_notes(commits):
     pr_release_notes = []
     for commit in commits:
         release_note = get_pr_release_note(commit.hexsha)
-        pr_release_notes.append(release_note)
+        if release_note not in pr_release_notes:
+            pr_release_notes.append(release_note)
     return pr_release_notes
 
 def main():
