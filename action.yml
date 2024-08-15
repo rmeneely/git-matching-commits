@@ -19,7 +19,8 @@ inputs:
     required: false
   commit_message_pattern:
     description: A regex to match commit messages
-    required: true
+    default: ''
+    required: false
   commit_type:
     description: The type of commit to match - merge|all
     default: 'merge'

@@ -1,5 +1,5 @@
 # git-matching-commits
-This GitHub Action returns a space separated string of all git commit SHAs within a merged commit where the commit message matches a commit message pattern.
+This GitHub Action returns a space separated string of all git commit SHAs within a merged commit where the commit matches either a commit message pattern, or a GitHub label.
 Note that the commit_message_pattern is against merged commits (i.e. Pull Request merges), not individual commits within the Pull Request.
 The order of the returned commits is according to `committerdate`
 
@@ -24,7 +24,7 @@ All inputs are optional. If not set the default value will be used.
 | ---------------------- |:------------------------------------------- | :------------------------------------------- |
 | start_tag_pattern      | regex expression to match the starting tag  | v[0-9]*.[0-9]*.[0-9] |
 | end_tag_pattern        | regex expression to match the ending tag    | HEAD |
-| commit_message_pattern | regex expression to match a returned commit | .* |
+| commit_message_pattern | regex expression to match a returned commit | '' |
 | commit_type            | The type of commits to match (`merge`, `all`)    | merge |
 | github_labels | Comma separated list of GitHub labels used to identify matching commit | none |
 | github_repository | \<owner>/\<repository> - Required if either `gethub_labels` or `release_notes_file` is set | none  |
@@ -47,7 +47,7 @@ All inputs are optional. If not set the default value will be used.
 Matches either a string within the merged commit, or a GitHub Pull Request label 'hotfix'
 ```yaml
     # Returns a string containing all matching merged commits where the merged commit either:
-    Has a PR title containing the text [Hotfix] (case-insensative). The range of merged commits is between the latest commit with tag matching the start tag pattern and the current branch HEAD
+    Has a PR title containing the text [Hotfix] (case-insensitive). The range of merged commits is between the latest commit with tag matching the start tag pattern and the current branch HEAD
      OR
     The merged commit Pull Request has a GitHub Pull Request label of 'hotfix'
     Creates a file named release-notes containing the GitHub PR release notes for matching commits
